@@ -1,5 +1,6 @@
 import logging
 import re
+from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 from telegram import Update
@@ -26,9 +27,15 @@ SHEET_NAME = "KeuanganBot"
 # ======================
 scopes = ["https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_file(
-    "service_account.json",
+
+google_creds_json = os.getenv("GOOGLE_CREDENTIALS")
+google_creds_dict = json.loads(google_creds_json)
+
+creds = Credentials.from_service_account_info(
+    google_creds_dict,
     scopes=scopes
+
+
 )
 client = gspread.authorize(creds)
 sheet = client.open(SHEET_NAME).sheet1
