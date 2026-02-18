@@ -12,6 +12,22 @@ from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, fil
 import gspread
 from google.oauth2.service_account import Credentials
 
+# === FUNCTION ===
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Bot aktif 🔥")
+
+# === MAIN ===
+app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
+
+app.add_handler(CommandHandler("start", start))
+
+print("Bot jalan...")
+app.run_polling()
+
+
+
+
+
 # =======================
 # PERUBAHAN SEPARATOR UANG
 # ========================
