@@ -16,10 +16,23 @@ from google.oauth2.service_account import Credentials
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Bot aktif 🔥")
 
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    
+    if text.startswith("+"):
+        await update.message.reply_text(f"Pemasukan tercatat: {text}")
+    elif text.startswith("-"):
+        await update.message.reply_text(f"Pengeluaran tercatat: {text}")
+    else:
+        await update.message.reply_text("Format salah. Gunakan + atau - di depan angka.")
+
+
 # === MAIN ===
 app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
 
 app.add_handler(CommandHandler("start", start))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 print("Bot jalan...")
 app.run_polling()
