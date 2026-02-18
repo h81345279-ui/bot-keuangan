@@ -35,9 +35,6 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 print("Bot jalan...")
-app.run_polling(
-    drop_pending_updates=True,
-    close_loop=False)
 
 
 
@@ -133,7 +130,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # MAIN
 # ======================
 def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO)
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
@@ -141,7 +140,7 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Bot jalan...")
-    app.run_polling()
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
