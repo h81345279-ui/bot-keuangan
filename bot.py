@@ -69,7 +69,7 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     title = "📊 RINGKASAN SEMUA DATA\n\n"
 
     if context.args:
-    arg_text = " ".join(context.args).lower()
+        arg_text = " ".join(context.args).lower()
 
     # 1️⃣ Kalau user ketik "bulan"
     if arg_text == "bulan":
