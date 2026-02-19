@@ -106,7 +106,7 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             total_expense += amount
 
-            category = note if note else "Lainnya"
+            category = note.strip().lower() if note else "lainnya"
 
             expense_by_category[category] = expense_by_category.get(category, 0) + amount
 
@@ -154,6 +154,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     sign, amount, note = match.groups()
     amount = int(amount)
+   
+  # =====Normalisasi kategori disini ya====
+    
+    note = note.strip().lower() if note else "lainnya"
 
     last_balance = get_last_balance()
 
