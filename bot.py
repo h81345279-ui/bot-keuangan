@@ -60,6 +60,7 @@ def format_rupiah(angka):
 
 
 def get_last_balance():
+    sheet = get_month_sheet()
     data = sheet.get_all_values()
     if len(data) <= 1:
         return 0
@@ -121,35 +122,38 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     except:
                         pass
 
-# ===== MODE TAHUNAN =====
-if isinstance(filter_month, int):
 
-    (
-        total_income,
-        total_expense,
-        last_balance,
-        monthly_expense,
-        biggest_month,
-        biggest_category
-    ) = calculate_yearly_summary(rows, filter_month)
+         # ===== MODE TAHUNAN =====
+    if isinstance(filter_month, int):
 
-    monthly_text = ""
-    for month, amt in sorted(monthly_expense.items()):
-        monthly_text += f"Bulan {month}: {format_rupiah(amt)}\n"
+        (
+            total_income,
+            total_expense,
+            last_balance,
+            monthly_expense,
+            biggest_month,
+            biggest_category
+        ) = calculate_yearly_summary(rows, filter_month)
 
-    message = (
-        f"{title}"
-        f"💰 Total Pemasukan: {format_rupiah(total_income)}\n"
-        f"💸 Total Pengeluaran: {format_rupiah(total_expense)}\n"
-        f"🏦 Saldo Akhir Tahun: {format_rupiah(last_balance)}\n\n"
-        f"📅 Pengeluaran per Bulan:\n"
-        f"{monthly_text}\n"
-        f"🔥 Bulan Terbesar: {biggest_month}\n"
-        f"🏆 Kategori Terboros: {biggest_category}"
-    )
+        monthly_text = ""
+        for month, amt in sorted(monthly_expense.items()):
+            monthly_text += f"Bulan {month}: {format_rupiah(amt)}\n"
 
-    await update.message.reply_text(message)
-    return
+        message = (
+            f"{title}"
+            f"💰 Total Pemasukan: {format_rupiah(total_income)}\n"
+            f"💸 Total Pengeluaran: {format_rupiah(total_expense)}\n"
+            f"🏦 Saldo Akhir Tahun: {format_rupiah(last_balance)}\n\n"
+            f"📅 Pengeluaran per Bulan:\n"
+            f"{monthly_text}\n"
+            f"🔥 Bulan Terbesar: {biggest_month}\n"
+            f"🏆 Kategori Terboros: {biggest_category}"
+        )
+
+        await update.message.reply_text(message)
+        return
+
+
 
 
     total_income, total_expense, expense_by_category, largest_transaction, largest_detail = calculate_summary(rows, filter_month)
