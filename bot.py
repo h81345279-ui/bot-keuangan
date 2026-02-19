@@ -437,7 +437,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-    last_balance = get_last_balance(user_id)
+    user_id = update.effective_user.id
     text = update.message.text.strip()
 
     pattern = r"^([+-])(\d+)\s*(.*)$"
