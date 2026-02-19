@@ -67,7 +67,55 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"💰 Saldo sekarang: {format_rupiah(balance)}"
     )
+async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = sheet.get_all_values()
 
+    if len(data) <= 1:
+        await update.message.reply_text("Belum ada data.")
+        return
+
+    rows = data[1:]  # skip header
+
+    total_income = 0
+    total_expense = 0
+    expense_by_category = {}
+
+    for row in rows:
+        tipe = row[1]
+        amount = int(row[2])
+        note = row[3]
+
+        if tipe == "Pemasukan":
+            total_income += amount
+        else:
+            total_expense += amount
+            category = note if note else "Lainnya"
+
+            if category not in expense_by_category:
+                expense_by_category[category] = 0
+
+            expense_by_category[category] += amount
+
+    if expense_by_category:
+        biggest_category = max(expense_by_category, key=expense_by_category.get)
+        biggest_amount = expense_by_category[biggest_category]
+    else:
+        biggest_category = "-"
+        biggest_amount = 0
+
+    message = (
+        f"📊 RINGKASAN\n\n"
+        f"💰 Total Pemasukan: {format_rupiah(total_income)}\n"
+        f"💸 Total Pengeluaran: {format_rupiah(total_expense)}\n\n"
+        f"🔥 Kategori Terbesar:\n"
+        f"{biggest_category} - {format_rupiah(biggest_amount)}\n\n"
+        f"📂 Pengeluaran per Kategori:\n"
+    )
+
+    for cat, amt in expense_by_category.items():
+        message += f"{cat}: {format_rupiah(amt)}\n"
+
+    await update.message.reply_text(message)
 
 # ======================
 # HANDLE CHAT
@@ -132,6 +180,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("saldo", saldo))
+    app.add_handler(CommandHandler("summary", summary))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Bot jalan...")
