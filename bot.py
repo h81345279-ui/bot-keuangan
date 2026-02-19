@@ -53,6 +53,9 @@ def get_last_balance():
         return 0
     return int(data[-1][4])
 
+
+# ====SUMMARY====
+
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = sheet.get_all_values()
 
@@ -98,6 +101,39 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(message)
 
 
+# =====CALCULATE SUMMARY=======
+
+def calculate_summary(rows, filter_month=None):
+    total_income = 0
+    total_expense = 0
+    expense_by_category = {}
+    largest_transaction = 0
+    largest_detail = ""
+
+    for row in rows:
+        tanggal = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+        tipe = row[1]
+        amount = int(row[2])
+        note = row[3].strip().lower() if row[3] else "lainnya"
+
+        if filter_month:
+            if tanggal.month != filter_month.month or tanggal.year != filter_month.year:
+                continue
+
+        if tipe == "Pemasukan":
+            total_income += amount
+        else:
+            total_expense += amount
+            expense_by_category[note] = expense_by_category.get(note, 0) + amount
+
+            if amount > largest_transaction:
+                largest_transaction = amount
+                largest_detail = f"{tanggal.strftime('%d-%m-%Y')} | {note}"
+
+    return total_income, total_expense, expense_by_category, largest_transaction, largest_detail
+
+
+
 
 # ======================
 # COMMANDS
@@ -111,78 +147,6 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     balance = get_last_balance()
     await update.message.reply_text(
         f"💰 Saldo sekarang: {format_rupiah(balance)}")
-
-
-# ===SUMMARY===
-
-async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data = sheet.get_all_values()
-
-    if len(data) <= 1:
-        await update.message.reply_text("Belum ada data.")
-        return
-
-    rows = data[1:]
-
-    filter_month = False
-    now = datetime.now()
-
-    # Cek apakah user ketik /summary bulan
-    if context.args and context.args[0].lower() == "bulan":
-        filter_month = True
-
-    total_income = 0
-    total_expense = 0
-    expense_by_category = {}
-    largest_transaction = 0
-    largest_detail = ""
-
-    for row in rows:
-        tanggal_str = row[0]
-        tipe = row[1]
-        amount = int(row[2])
-        note = row[3]
-
-        tanggal = datetime.strptime(tanggal_str, "%Y-%m-%d %H:%M:%S")
-
-        if filter_month:
-            if tanggal.month != now.month or tanggal.year != now.year:
-                continue
-
-        if tipe == "Pemasukan":
-            total_income += amount
-        else:
-            total_expense += amount
-
-            category = note.strip().lower() if note else "lainnya"
-
-            expense_by_category[category] = expense_by_category.get(category, 0) + amount
-
-            if amount > largest_transaction:
-                largest_transaction = amount
-                largest_detail = f"{tanggal.strftime('%d-%m-%Y')} | {category}"
-
-    if total_expense > 0:
-        percent_text = ""
-        for cat, amt in expense_by_category.items():
-            percent = (amt / total_expense) * 100
-            percent_text += f"{cat}: {format_rupiah(amt)} ({percent:.1f}%)\n"
-    else:
-        percent_text = "Tidak ada pengeluaran."
-
-    title = "📊 RINGKASAN BULAN INI\n\n" if filter_month else "📊 RINGKASAN SEMUA DATA\n\n"
-
-    message = (
-        f"{title}"
-        f"💰 Total Pemasukan: {format_rupiah(total_income)}\n"
-        f"💸 Total Pengeluaran: {format_rupiah(total_expense)}\n\n"
-        f"🔥 Transaksi Terbesar:\n"
-        f"{largest_detail} - {format_rupiah(largest_transaction)}\n\n"
-        f"📂 Pengeluaran per Kategori:\n"
-        f"{percent_text}"
-    )
-
-    await update.message.reply_text(message)
 
 # ==========
 # TOP
