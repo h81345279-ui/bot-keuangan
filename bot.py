@@ -53,6 +53,51 @@ def get_last_balance():
         return 0
     return int(data[-1][4])
 
+async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = sheet.get_all_values()
+
+    if len(data) <= 1:
+        await update.message.reply_text("Belum ada data.")
+        return
+
+    rows = data[1:]
+
+    filter_month = None
+    title = "📊 RINGKASAN SEMUA DATA\n\n"
+
+    if context.args:
+        arg = context.args[0].lower()
+
+        if arg == "bulan":
+            filter_month = datetime.now()
+            title = "📊 RINGKASAN BULAN INI\n\n"
+        else:
+            try:
+                filter_month = datetime.strptime(arg, "%m-%Y")
+                title = f"📊 RINGKASAN {arg}\n\n"
+            except:
+                pass
+
+    total_income, total_expense, expense_by_category, largest_transaction, largest_detail = calculate_summary(rows, filter_month)
+
+    percent_text = ""
+    for cat, amt in expense_by_category.items():
+        percent = (amt / total_expense) * 100 if total_expense else 0
+        percent_text += f"{cat}: {format_rupiah(amt)} ({percent:.1f}%)\n"
+
+    message = (
+        f"{title}"
+        f"💰 Total Pemasukan: {format_rupiah(total_income)}\n"
+        f"💸 Total Pengeluaran: {format_rupiah(total_expense)}\n\n"
+        f"🔥 Transaksi Terbesar:\n"
+        f"{largest_detail} - {format_rupiah(largest_transaction)}\n\n"
+        f"📂 Pengeluaran per Kategori:\n"
+        f"{percent_text}"
+    )
+
+    await update.message.reply_text(message)
+
+
 
 # ======================
 # COMMANDS
@@ -66,6 +111,9 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     balance = get_last_balance()
     await update.message.reply_text(
         f"💰 Saldo sekarang: {format_rupiah(balance)}")
+
+
+# ===SUMMARY===
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = sheet.get_all_values()
@@ -136,6 +184,42 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(message)
 
+# ==========
+# TOP
+# ==========
+
+async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = sheet.get_all_values()
+
+    if len(data) <= 1:
+        await update.message.reply_text("Belum ada data.")
+        return
+
+    rows = data[1:]
+
+    _, total_expense, expense_by_category, _, _ = calculate_summary(rows)
+
+    if not expense_by_category:
+        await update.message.reply_text("Belum ada data pengeluaran.")
+        return
+
+    sorted_categories = sorted(
+        expense_by_category.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    message = "🏆 TOP 3 PENGELUARAN\n\n"
+
+    for i, (cat, amt) in enumerate(sorted_categories[:3], start=1):
+        percent = (amt / total_expense) * 100
+        message += f"{i}. {cat} - {format_rupiah(amt)} ({percent:.1f}%)\n"
+
+    await update.message.reply_text(message)
+
+
+
+
 # ======================
 # HANDLE CHAT
 # ======================
@@ -204,6 +288,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("saldo", saldo))
     app.add_handler(CommandHandler("summary", summary))
+    app.add_handler(CommandHandler("top", top))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Bot jalan...")
