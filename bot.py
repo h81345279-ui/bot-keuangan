@@ -69,17 +69,37 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     title = "📊 RINGKASAN SEMUA DATA\n\n"
 
     if context.args:
-        arg = context.args[0].lower()
+    arg_text = " ".join(context.args).lower()
 
-        if arg == "bulan":
-            filter_month = datetime.now()
-            title = "📊 RINGKASAN BULAN INI\n\n"
-        else:
-            try:
-                filter_month = datetime.strptime(arg, "%m-%Y")
-                title = f"📊 RINGKASAN {arg}\n\n"
-            except:
-                pass
+    # 1️⃣ Kalau user ketik "bulan"
+    if arg_text == "bulan":
+        filter_month = datetime.now()
+        title = "📊 RINGKASAN BULAN INI\n\n"
+
+    # 2️⃣ Format angka: 02-2026
+    else:
+        try:
+            filter_month = datetime.strptime(arg_text, "%m-%Y")
+            title = f"📊 RINGKASAN {arg_text}\n\n"
+        except:
+            parts = arg_text.split()
+
+            # 3️⃣ Format: januari
+            if len(parts) == 1 and parts[0] in MONTH_MAP:
+                month = MONTH_MAP[parts[0]]
+                year = datetime.now().year
+                filter_month = datetime(year, month, 1)
+                title = f"📊 RINGKASAN {parts[0].capitalize()} {year}\n\n"
+
+            # 4️⃣ Format: januari 2026
+            elif len(parts) == 2 and parts[0] in MONTH_MAP:
+                try:
+                    month = MONTH_MAP[parts[0]]
+                    year = int(parts[1])
+                    filter_month = datetime(year, month, 1)
+                    title = f"📊 RINGKASAN {parts[0].capitalize()} {year}\n\n"
+                except:
+                    pass
 
     total_income, total_expense, expense_by_category, largest_transaction, largest_detail = calculate_summary(rows, filter_month)
 
@@ -131,6 +151,24 @@ def calculate_summary(rows, filter_month=None):
                 largest_detail = f"{tanggal.strftime('%d-%m-%Y')} | {note}"
 
     return total_income, total_expense, expense_by_category, largest_transaction, largest_detail
+
+
+# ======DETEKSI BULAN=====
+
+MONTH_MAP = {
+    "januari": 1,
+    "februari": 2,
+    "maret": 3,
+    "april": 4,
+    "mei": 5,
+    "juni": 6,
+    "juli": 7,
+    "agustus": 8,
+    "september": 9,
+    "oktober": 10,
+    "november": 11,
+    "desember": 12,
+}
 
 
 
