@@ -137,21 +137,23 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ) = calculate_yearly_summary(rows, filter_month)
         
         net_profit = total_income - total_expense
+        sign = "+" if net_profit >= 0 else "-"
+        biggest_month_name = MONTH_NAME.get(biggest_month, biggest_month)
 
         monthly_text = ""
         for month, amt in sorted(monthly_expense.items()):
-            monthly_text += f"Bulan {month}: {format_rupiah(amt)}\n"
+            month_name = MONTH_NAME.get(month, f"Bulan {month}")
+            monthly_text += f"{month_name}: {format_rupiah(amt)}\n"
 
         message = (
             f"{title}"
             f"💰 Total Pemasukan: {format_rupiah(total_income)}\n"
             f"💸 Total Pengeluaran: {format_rupiah(total_expense)}\n"
-            sign = "+" if net_profit >= 0 else "-"
             f"📈 Net Profit: {sign}{format_rupiah(abs(net_profit))}\n"
             f"🏦 Saldo Akhir Tahun: {format_rupiah(last_balance)}\n\n"
             f"📅 Pengeluaran per Bulan:\n"
             f"{monthly_text}\n"
-            f"🔥 Bulan Terbesar: {biggest_month}\n"
+            f"🔥 Bulan Terbesar: {biggest_month_name}\n"
             f"🏆 Kategori Terboros: {biggest_category}"
         )
 
@@ -272,6 +274,23 @@ def calculate_yearly_summary(rows, year):
 # ======DETEKSI BULAN=====
 
 MONTH_MAP = {
+    "januari": 1,
+    "februari": 2,
+    "maret": 3,
+    "april": 4,
+    "mei": 5,
+    "juni": 6,
+    "juli": 7,
+    "agustus": 8,
+    "september": 9,
+    "oktober": 10,
+    "november": 11,
+    "desember": 12,
+}
+
+
+
+MONTH_NAME = {
     1 : "januari",
     2 : "februari",
     3 : "maret",
