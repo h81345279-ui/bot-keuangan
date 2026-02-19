@@ -70,6 +70,7 @@ def get_last_balance():
 # ====SUMMARY====
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sheet = get_month_sheet()
     data = sheet.get_all_values()
 
     if len(data) <= 1:
@@ -293,6 +294,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sheet = get_month_sheet()
     balance = get_last_balance()
     await update.message.reply_text(
         f"💰 Saldo sekarang: {format_rupiah(balance)}")
@@ -302,6 +304,7 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==========
 
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sheet = get_month_sheet()
     data = sheet.get_all_values()
 
     if len(data) <= 1:
@@ -335,6 +338,7 @@ async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ===========
 
 async def chart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    sheet = get_month_sheet()
     data = sheet.get_all_values()
 
     if len(data) <= 1:
