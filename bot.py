@@ -433,6 +433,7 @@ async def chart(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ======================
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    last_balance = get_last_balance(user_id)
     text = update.message.text.strip()
 
     pattern = r"^([+-])(\d+)\s*(.*)$"
@@ -450,8 +451,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
   # =====Normalisasi kategori disini ya====
     
     note = note.strip().lower() if note else "lainnya"
-
-    last_balance = get_last_balance(user_id)
 
     if sign == "+":
         new_balance = last_balance + amount
