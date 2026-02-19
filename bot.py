@@ -104,7 +104,7 @@ def get_last_balance(user_id):
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    sheet = get_month_sheet()
+    sheet = get_month_sheet(user_id)
     data = sheet.get_all_values()
 
     if len(data) <= 1:
@@ -352,9 +352,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    saldo = get_last_balance(user_id)
-    sheet = get_month_sheet()
     balance = get_last_balance(user_id)
+
     await update.message.reply_text(
         f"💰 Saldo sekarang: {format_rupiah(balance)}")
 
@@ -363,7 +362,8 @@ async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ==========
 
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    sheet = get_month_sheet()
+    user_id = update.effective_user.id
+    sheet = get_month_sheet(user_id)
     data = sheet.get_all_values()
 
     if len(data) <= 1:
@@ -433,6 +433,10 @@ async def chart(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ======================
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+
+
     last_balance = get_last_balance(user_id)
     text = update.message.text.strip()
 
@@ -451,6 +455,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
   # =====Normalisasi kategori disini ya====
     
     note = note.strip().lower() if note else "lainnya"
+
+    last_balance = get_last_balance(user_id)
 
     if sign == "+":
         new_balance = last_balance + amount
