@@ -39,17 +39,43 @@ creds = Credentials.from_service_account_info(
 )
 
 client = gspread.authorize(creds)
+
+from datetime import datetime
+
+def get_user_spreadsheet(user_id):
+    sheet_name = f"KeuanganBot_{user_id}"
+
+    try:
+        return client.open(sheet_name)
+    except:
+        spreadsheet = client.create(sheet_name)
+
+        # Share ke service account supaya bisa ditulis
+        spreadsheet.share(
+            google_creds_dict["client_email"],
+            perm_type="user",
+            role="writer"
+        )
+
+        return spreadsheet
+
+
 spreadsheet = client.open(SHEET_NAME)
 
-def get_month_sheet():
+def get_month_sheet(user_id):
+    spreadsheet = get_user_spreadsheet(user_id)
     sheet_name = datetime.now().strftime("%m-%Y")
+
     try:
         return spreadsheet.worksheet(sheet_name)
     except:
-        new_sheet = spreadsheet.add_worksheet(title=sheet_name, rows="1000", cols="5")
+        new_sheet = spreadsheet.add_worksheet(
+            title=sheet_name,
+            rows="1000",
+            cols="5"
+        )
         new_sheet.append_row(["Tanggal", "Tipe", "Jumlah", "Kategori", "Saldo"])
         return new_sheet
-
 
 # ======================
 # HELPER FUNCTION
@@ -59,17 +85,25 @@ def format_rupiah(angka):
     return f"{angka:,}".replace(",", ".")
 
 
-def get_last_balance():
-    sheet = get_month_sheet()
-    data = sheet.get_all_values()
+def get_last_balance(user_id):
+    spreadsheet = get_user_spreadsheet(user_id)
+    worksheets = spreadsheet.worksheets()
+
+    if not worksheets:
+        return 0
+
+    latest_sheet = worksheets[-1]
+    data = latest_sheet.get_all_values()
+
     if len(data) <= 1:
         return 0
-    return int(data[-1][4])
 
+    return int(data[-1][4])
 
 # ====SUMMARY====
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     sheet = get_month_sheet()
     data = sheet.get_all_values()
 
@@ -317,8 +351,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def saldo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    saldo = get_last_balance(user_id)
     sheet = get_month_sheet()
-    balance = get_last_balance()
+    balance = get_last_balance(user_id)
     await update.message.reply_text(
         f"💰 Saldo sekarang: {format_rupiah(balance)}")
 
@@ -361,7 +397,8 @@ async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ===========
 
 async def chart(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    sheet = get_month_sheet()
+    user_id = update.effective_user.id
+    sheet = get_month_sheet(user_id)
     data = sheet.get_all_values()
 
     if len(data) <= 1:
@@ -414,7 +451,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     note = note.strip().lower() if note else "lainnya"
 
-    last_balance = get_last_balance()
+    last_balance = get_last_balance(user_id)
 
     if sign == "+":
         new_balance = last_balance + amount
@@ -431,7 +468,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    sheet = get_month_sheet()
+    user_id = update.effective_user.id
+    sheet = get_month_sheet(user_id)
     sheet.append_row([
         now,
         tipe,
