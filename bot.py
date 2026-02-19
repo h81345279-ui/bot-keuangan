@@ -68,40 +68,46 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE):
     filter_month = None
     title = "📊 RINGKASAN SEMUA DATA\n\n"
 
+    arg_text = None
     if context.args:
         arg_text = " ".join(context.args).lower()
 
-    # 1️⃣ Kalau user ketik "bulan"
-    if arg_text == "bulan":
-        filter_month = datetime.now()
-        title = "📊 RINGKASAN BULAN INI\n\n"
+    if arg_text:
+        # 1️⃣ Kalau user ketik "bulan"
+        if arg_text == "bulan":
+            filter_month = datetime.now()
+            title = "📊 RINGKASAN BULAN INI\n\n"
 
-    # 2️⃣ Format angka: 02-2026
-    else:
-        try:
-            filter_month = datetime.strptime(arg_text, "%m-%Y")
-            title = f"📊 RINGKASAN {arg_text}\n\n"
-        except:
-            parts = arg_text.split()
+        # 2️⃣ Format angka: 02-2026
+        else:
+            try:
+                filter_month = datetime.strptime(arg_text, "%m-%Y")
+                title = f"📊 RINGKASAN {arg_text}\n\n"
+            except:
+                parts = arg_text.split()
 
-            # 3️⃣ Format: januari
-            if len(parts) == 1 and parts[0] in MONTH_MAP:
-                month = MONTH_MAP[parts[0]]
-                year = datetime.now().year
-                filter_month = datetime(year, month, 1)
-                title = f"📊 RINGKASAN {parts[0].capitalize()} {year}\n\n"
-
-            # 4️⃣ Format: januari 2026
-            elif len(parts) == 2 and parts[0] in MONTH_MAP:
-                try:
+                # 3️⃣ Format: januari
+                if len(parts) == 1 and parts[0] in MONTH_MAP:
                     month = MONTH_MAP[parts[0]]
-                    year = int(parts[1])
+                    year = datetime.now().year
                     filter_month = datetime(year, month, 1)
                     title = f"📊 RINGKASAN {parts[0].capitalize()} {year}\n\n"
-                except:
-                    pass
+
+                # 4️⃣ Format: januari 2026
+                elif len(parts) == 2 and parts[0] in MONTH_MAP:
+                    try:
+                        month = MONTH_MAP[parts[0]]
+                        year = int(parts[1])
+                        filter_month = datetime(year, month, 1)
+                        title = f"📊 RINGKASAN {parts[0].capitalize()} {year}\n\n"
+                    except:
+                        pass
 
     total_income, total_expense, expense_by_category, largest_transaction, largest_detail = calculate_summary(rows, filter_month)
+
+    # Kalau tidak ada pengeluaran
+    if largest_transaction == 0:
+        largest_detail = "-"
 
     percent_text = ""
     for cat, amt in expense_by_category.items():
