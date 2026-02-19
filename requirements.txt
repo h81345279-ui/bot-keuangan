@@ -2,3 +2,6 @@ python-telegram-bot==20.3
 gspread
 oauth2client
 google-auth
+matpotlib
+google-auth-oauthlib
+google-auth-httplib2
